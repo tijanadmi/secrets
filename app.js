@@ -35,19 +35,33 @@ app.use(passport.session());
 mongoose.set('strictQuery', false);
 mongoose.connect("mongodb://localhost:27017/userDB");
 
+var username;
+const moviesSchema=  new mongoose.Schema({
+        title : String,
+        duration : Number,
+        genre : String,
+        directors : String,
+        actors : String,
+        screening : Date,
+        plot:  String,
+        poster : String,
+    repertoires: [
+    {  date: Date, time: String, hall: String, numOfTickets: Number, numOfResTickets: Number }
+    ]   
+});
+
+const Movie = mongoose.model("Movie", moviesSchema);
 
 const usersSchema=  new mongoose.Schema({
     email: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secrets: [String]
 });
 
-const secretsSchema=  new mongoose.Schema({
-    secret: String,
-    username: String
-});
 
-const Secret = mongoose.model("Secret", secretsSchema);
+
+
 
 
 usersSchema.plugin(passportLocalMongoose);
@@ -80,7 +94,7 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://localhost:3000/auth/google/secrets"
   },
   function(accessToken, refreshToken, profile, cb) {
-    console.log(profile);
+    //console.log(profile.displayName);
     User.findOrCreate({ googleId: profile.id }, function (err, user) {
       return cb(err, user);
     });
@@ -101,8 +115,23 @@ app.get("/register", function(req, res){
 });
 
 app.get("/secrets", function(req, res){
+    let today = new Date();
+
+    let options = {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+    }
+    let options1 = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    }
+    let day = today.toLocaleDateString("en-GB", options1);
+    console.log(day);
+    console.log("nesto");
     if (req.isAuthenticated()){
-        res.render("secrets");
+        res.render("secrets",{myData: day});
     } else {
         res.redirect("/login");
     }
@@ -149,6 +178,7 @@ app.post("/login", function(req, res){
             console.log(err);
         } else {
             passport.authenticate("local")(req, res, function(){
+                username=user.username;
                 res.redirect("/secrets");
             });
         }
@@ -180,6 +210,25 @@ app.post("/login", function(req, res){
     req.logout();
     res.redirect("/");
 });*/
+
+app.get("/movies", function(req, res){
+    let today = new Date();
+    console.log(today);
+    
+    var datatodays = today.setDate(new Date(today).getDate() + 7);
+    todate = new Date(datatodays);
+    console.log(todate);
+  
+     
+    Movie.find({'repertoires.date': { $lt: todate }},function(err, foundMoviesItems){
+      if (err){
+          console.log(err);
+      } else {
+      
+    res.render("movies", {moviesItems: foundMoviesItems, todate: todate});
+      }
+    });
+  });
 
 app.get("/auth/google",
     passport.authenticate("google", { scope: ["profile"] }));
@@ -228,6 +277,18 @@ app.get("/logout", function(req, res, next) {
     
 
   });
+
+  app.get("/reservation", function(req, res){
+ 
+    console.log(username);
+    
+    
+    if (req.isAuthenticated()){
+        res.render("reservation",{username: username});
+    } else {
+        res.redirect("/login");
+    }
+});
 
 app.listen(3000, function() {
     console.log("Server started on port 3000");

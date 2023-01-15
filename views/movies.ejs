@@ -1,0 +1,54 @@
+<%- include("partials/header"); -%>
+<body>
+    <div class="container">
+    <div class="movie-container">
+        <% moviesItems.forEach(function(moviesItem){ %>
+            <div>               
+            <img src=<%=moviesItem.poster%> alt="poster">   
+            <div>
+                <h4><%= moviesItem.title %></h4>
+                <p4><span style="color:blue" "font-weight: bold"><%=moviesItem.duration%> min</span></p4>
+                <br>
+                
+                <p4><b>žanr: </b><%=moviesItem.genre%></p4>
+                <br>
+            <p4><b>režiser: </b><%=moviesItem.directors%></p4>
+            <br>
+            <p4><b>glumci: </b><%=moviesItem.actors%></p4>
+            <br>
+            <p4><b>u bioskopima od: </b><%=moviesItem.screening%></p4>
+            <br>
+            <br>
+                    <p3>
+                        <%= moviesItem.plot.substring(0, 150) + " ..." %>
+                    </p3>
+                    <p3>
+                        <a href="/movies/<%=moviesItem._id%>">Read More</a>
+                    </p3>
+                    <% moviesItem.repertoires.forEach(function(repertoire){ %>
+                        <% let m = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"]; %>
+                        <% let optionsm = {month: "2-digit"}%>
+                        <% let dn = ["Nedelja", "Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota"]; %>
+                        <% let dan = dn[repertoire.date.getDay()]; %>
+                        
+                        <table >
+                            <% if (repertoire.date < todate && repertoire.date >= new Date() ){ %>
+                        <tr class="table">
+
+                        <td ><b><%=dan %></b></td>
+                            <td><%= repertoire.date.getDate() + "." + repertoire.date.toLocaleDateString("en-GB", optionsm) + "." + repertoire.date.getFullYear() %> </td>
+                            <td><%= repertoire.time  %></td>
+                            <td><button>Rezerviši</button></td>
+                            <tr >
+                            <br>
+                            <% } %>
+                    <% }) %>
+                
+            </table>
+                </div>   
+            </div>          
+           <% }) %>
+        </div>  
+
+
+<%- include("partials/footer"); -%>

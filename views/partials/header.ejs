@@ -11,3 +11,22 @@
 </head>
 
 <body>
+  <nav class="navbar navbar-default">
+    <div class="container">
+      <div class="navbar-header">
+        <p class="navbar-brand">CINI</p>
+      </div>
+        <ul class="nav navbar-nav navbar-right">
+          <li id="home"><a href="/">POČETNA</a></li>
+          <li id="movies"><a href="/movies">REPERTOAR</a></li>
+          <li id="pricelist"><a href="/pricelist">CENE</a></li>
+          <li id="contact"><a href="/contact">KONTAKT</a></li>
+          <% if (isAuthenticated) { %>
+            <li id="contact"><a href="/logout">Logout</a></li>
+          <% } else { %>
+            <li id="contact"><a href="/login">Login</a></li>
+            <li id="contact"><a href="/register">Register</a></li>
+          <% } %>
+        </ul>
+    </div>
+  </nav>

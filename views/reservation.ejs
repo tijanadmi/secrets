@@ -2,8 +2,36 @@
 <body>
     <div class="container">
     <div class="movie-container">
-       <h1>Rezervacija za: <%=username%></h1>
-        </div>  
+        <h1> <%=username%> </h1>
+        <% let optionsm = {month: "2-digit"}%>
+        
+        <h2>Rezervisali ste za  datum: <%=date%>, vreme: <%=time%>, salu: <%=hall.name%>  </h2>
+        <div class="table-response-sm">
+            <table class="table table-bordered table-sm">
+                <tr class="table-active">
+                <td class="text-center">
+                </td>
+                <% hall.cols.forEach(function(col){ %>
+                    <td class="text-center">
+                        <%=col%>
+                    </td>
+                <% }) %>
+                <% hall.rows.forEach(function(row){ %>
+                    <tr class="table-active">
+                    <td class="text-center">
+                        <%=row%>
+                    </td>
+                    <% hall.cols.forEach(function(col){ %>
+                        <td class="text-center">
+                            <input type="checkbox">
+                        </td>
+                    <% }) %>
+                </tr>
+                <% }) %>
+                </tr>
+            </table>
+        </div>
+    </div>  
 
 
 <%- include("partials/footer"); -%>

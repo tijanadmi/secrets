@@ -31,6 +31,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use(function(req, res, next){
+    res.locals.isAuthenticated = req.isAuthenticated();
+    next();
+});
+
 
 mongoose.set('strictQuery', false);
 mongoose.connect("mongodb://localhost:27017/userDB");
@@ -51,6 +56,14 @@ const moviesSchema=  new mongoose.Schema({
 });
 
 const Movie = mongoose.model("Movie", moviesSchema);
+
+const hallsSchema=  new mongoose.Schema({
+    name: String,
+    rows: [String],
+    cols: [Number]
+});
+
+const Hall = mongoose.model("Hall", hallsSchema);
 
 const usersSchema=  new mongoose.Schema({
     email: String,
@@ -243,6 +256,7 @@ app.get("/auth/google/secrets",
 app.get("/logout", function(req, res, next) {
     req.logout(function(err) {
       if (err) { return next(err); }
+      //req.session.destroy;
       res.redirect('/');
     });
   });
@@ -278,13 +292,24 @@ app.get("/logout", function(req, res, next) {
 
   });
 
-  app.get("/reservation", function(req, res){
- 
-    console.log(username);
+  app.get("/reservation/:date/:time/:hall", function(req, res){
+    let optionsm = {month: "2-digit"}
+    const requestedDate = req.params.date;
+    const requestedTime = req.params.time;
+    const requestedHall = req.params.hall;
+    
     
     
     if (req.isAuthenticated()){
-        res.render("reservation",{username: username});
+        Hall.findOne({name: requestedHall}, function(err, foundHall){
+            if (foundHall){
+                console.log(foundHall);
+                res.render("reservation",{username: "Tijana", date: requestedDate, time: requestedTime, hall:foundHall });
+            } else {
+                res.send("No hall matching that requestedHall was found.");
+            }
+        });
+        
     } else {
         res.redirect("/login");
     }

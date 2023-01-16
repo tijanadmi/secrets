@@ -36,9 +36,10 @@
                         <tr class="table">
 
                         <td ><b><%=dan %></b></td>
-                            <td><%= repertoire.date.getDate() + "." + repertoire.date.toLocaleDateString("en-GB", optionsm) + "." + repertoire.date.getFullYear() %> </td>
+                            <% let fullDate = repertoire.date.getDate() + "." + repertoire.date.toLocaleDateString("en-GB", optionsm) + "." + repertoire.date.getFullYear(); %>
+                            <td><%=fullDate%> </td>
                             <td><%= repertoire.time  %></td>
-                            <td><button>Rezerviši</button></td>
+                            <td> <a class="btn btn-light btn-lg" href="/reservation/<%=fullDate%>/<%=repertoire.time%>/<%=repertoire.hall%>" role="button">Rezerviši</a></td>
                             <tr >
                             <br>
                             <% } %>

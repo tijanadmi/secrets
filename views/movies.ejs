@@ -39,7 +39,7 @@
                             <% let fullDate = repertoire.date.getDate() + "." + repertoire.date.toLocaleDateString("en-GB", optionsm) + "." + repertoire.date.getFullYear(); %>
                             <td><%=fullDate%> </td>
                             <td><%= repertoire.time  %></td>
-                            <td> <a class="btn btn-light btn-lg" href="/reservation/<%=fullDate%>/<%=repertoire.time%>/<%=repertoire.hall%>" role="button">Rezerviši</a></td>
+                            <td> <a class="btn btn-light btn-lg" href="/reservation/<%=repertoire.date%>/<%=repertoire.time%>/<%=repertoire.hall%>/<%=moviesItem._id%>/<%=repertoire._id%>" role="button">Rezerviši</a></td>
                             <tr >
                             <br>
                             <% } %>

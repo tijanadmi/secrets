@@ -24,7 +24,13 @@
                     </td>
                     <% hall.cols.forEach(function(col){ %>
                         <td class="text-center">
-                            <input type="checkbox" name ="add" value="<%=row%><%=col%>">
+                            
+                            <% if (occupy.includes(row+col)){ %>
+                                <input type="hidden">
+                            <% }else{%>
+                                <input type="checkbox"
+                                name ="add" value="<%=row%><%=col%>">
+                            <% }%>
                         </td>
                     <% }) %>
                 </tr>

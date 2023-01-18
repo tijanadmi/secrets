@@ -40,7 +40,7 @@ app.use(function(req, res, next){
 mongoose.set('strictQuery', false);
 mongoose.connect("mongodb://localhost:27017/userDB");
 
-var username;
+var user1;
 const moviesSchema=  new mongoose.Schema({
         title : String,
         duration : Number,
@@ -115,14 +115,16 @@ const usersSchema=  new mongoose.Schema({
         ]   
 });
 
-/*const reservationsSchema=  new mongoose.Schema({
+const reservationsSchema=  new mongoose.Schema({
+    userId:  String,
+    movieId: String,
     date: Date,
     time: String,
     hall: String, 
     reservSeats: [String]
 });
 
-const Reservation = mongoose.model("Reservation", reservationsSchema);*/
+const Reservation = mongoose.model("Reservation", reservationsSchema);
 
 
 
@@ -158,6 +160,7 @@ passport.use(new GoogleStrategy({
   function(accessToken, refreshToken, profile, cb) {
     //console.log(profile.displayName);
     User.findOrCreate({ googleId: profile.id }, function (err, user) {
+        user1=user;
       return cb(err, user);
     });
   }
@@ -206,6 +209,7 @@ app.post("/register", function(req, res){
             console.log(err);
             res.redirect("/register");
         } else {
+            user1 = user;
             passport.authenticate("local")(req, res, function(){
                 res.redirect("/secrets");
             });
@@ -240,7 +244,8 @@ app.post("/login", function(req, res){
             console.log(err);
         } else {
             passport.authenticate("local")(req, res, function(){
-                username=user.username;
+                //username=user.username;
+                user1 = user;
                 res.redirect("/secrets");
             });
         }
@@ -351,14 +356,25 @@ app.get("/logout", function(req, res, next) {
     
     
     if (req.isAuthenticated()){
-        Hall.findOne({name: requestedHall}, function(err, foundHall){
-            if (foundHall){
-                console.log(foundHall);
-                res.render("reservation",{username: "Tijana", movieId: requestedMovieId, date: requestedDate, time: requestedTime, hall:foundHall, paramHall: req.params.hall, paramDate: req.params.date, resId: req.params.resId });
-            } else {
-                res.send("No hall matching that requestedHall was found.");
+        Movie.findOne({'repertoires._id':req.params.resId},{reservSeats:1,  repertoires: { $elemMatch:{ _id:req.params.resId } }}, function(err, foundMovie){
+            if (err){
+                console.log(err);
+            }
+            else{
+                console.log(foundMovie);
+                var occupy = foundMovie.repertoires[0].reservSeats;
+                console.log(occupy);
+                Hall.findOne({name: requestedHall}, function(err, foundHall){
+                    if (foundHall){
+                        console.log(foundHall);
+                        res.render("reservation",{username: user1.name, movieId: requestedMovieId, date: requestedDate, time: requestedTime, hall:foundHall, paramHall: req.params.hall, paramDate: req.params.date, resId: req.params.resId, occupy:occupy });
+                    } else {
+                        res.send("No hall matching that requestedHall was found.");
+                    }
+                });
             }
         });
+        
         
     } else {
         res.redirect("/login");
@@ -366,19 +382,20 @@ app.get("/logout", function(req, res, next) {
 });
 
 app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
-    var res = req.body.add;
-    console.log(typeof res);
-    var typeOut = typeof res;
+    var r = req.body.add;
+    console.log(typeof r);
+    var typeOut = typeof r;
     var niz = [];
     if (typeOut ==="undefined"){
         console.log("Nije nista izabrano!");
+        res.redirect("/movies");
     } else if (typeOut ==="string"){
         num = 1;
-        niz.push(res);
+        niz.push(r);
         console.log(num);
     } else {
-        num = res.length;
-        niz = res;
+        num = r.length;
+        niz = r;
         console.log(num);
     }
    
@@ -404,13 +421,25 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
                     console.log("Karte su rasprodate! Probajte sa manjim brojem");
                 } else {
                     var niz1 = foundMovie.repertoires[0].reservSeats;
-                    var niz2 = niz1.concat(niz);
+                    var niz2 = niz1.concat(niz).sort();
                     console.log(niz2);
                     Movie.findOneAndUpdate({'repertoires._id': req.params.resId}, { "repertoires.$.reservSeats" : niz2 , "repertoires.$.numOfResTickets" : numberOfRT + num}, function (err, foundMovie) {
                         if (err){
                             console.log(err);
                         } else {
-                            console.log("Uspesno!");
+                            console.log("Uspesno before!");
+                            console.log(user1);
+                            const reservation1 = new Reservation({
+                                userId:  user1._id,
+                                movieId: foundMovie._id,
+                                date: foundMovie.repertoires[0].date,
+                                time: foundMovie.repertoires[0].time,
+                                hall: foundMovie.repertoires[0].hall, 
+                                reservSeats: niz
+                            });
+                            reservation1.save();
+                            console.log("Uspesno after!");
+                            res.redirect("/movies");
                         }});
                 }
                 /*foundMovie.repertoires.forEach(function(repertoire){ 

@@ -1,0 +1,26 @@
+<%- include("partials/header"); -%>
+<body>
+    <div class="container">
+    <div class="movie-container">
+        <% myReservations.forEach(function(myReservation){ %>
+                
+             
+            
+                <p4><%= myReservation.movieTitle %><p4>
+                <p4><%=myReservation.date%> min</p4>
+               
+                
+                <p4><%=myReservation.time%></p4>
+               
+            <p4><%=myReservation.hall%></p4>
+           
+            <p4><%=myReservation.creationDate%></p4>
+            <p4><%=myReservation.reservSeats%></p4>
+            <br>
+         
+           <% }) %>
+        </div>  
+        </div>  
+
+
+<%- include("partials/footer"); -%>

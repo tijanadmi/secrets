@@ -116,11 +116,13 @@ const usersSchema=  new mongoose.Schema({
 });
 
 const reservationsSchema=  new mongoose.Schema({
-    userId:  String,
+    username:  String,
     movieId: String,
+    movieTitle: String,
     date: Date,
     time: String,
     hall: String, 
+    creationDate: Date,
     reservSeats: [String]
 });
 
@@ -159,15 +161,21 @@ passport.use(new GoogleStrategy({
   },
   function(accessToken, refreshToken, profile, cb) {
     //console.log(profile.displayName);
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+    User.findOrCreate({ googleId: profile.id, name: profile.displayName }, function (err, user) {
         user1=user;
       return cb(err, user);
     });
   }
 ));
 
+app.get('*', function(req, res, next) {
+    res.locals.user = req.user || null;
+    next();
+});
+
 
 app.get("/", function(req, res){
+    console.log(res.locals.user);
     res.render("home");
 });
 
@@ -176,10 +184,12 @@ app.get("/login", function(req, res){
 });
 
 app.get("/register", function(req, res){
+    console.log(res.locals.user);
     res.render("register");
 });
 
 app.get("/secrets", function(req, res){
+    console.log(res.locals.user);
     let today = new Date();
 
     let options = {
@@ -204,7 +214,7 @@ app.get("/secrets", function(req, res){
 
 app.post("/register", function(req, res){
 
-    User.register({username: req.body.username}, req.body.password, function(err, user){
+    User.register({username: req.body.username, name: req.body.fullName}, req.body.password, function(err, user){
         if (err){
             console.log(err);
             res.redirect("/register");
@@ -236,7 +246,8 @@ app.post("/login", function(req, res){
 
     const user = new User({
         username: req.body.username,
-        password: req.body.password
+        password: req.body.password,
+        name: "Tijana",
     }); 
 
     req.login(user, function(err){
@@ -273,10 +284,7 @@ app.post("/login", function(req, res){
     });*/
 });
 
-/*app.get("/logout", function(req, res){
-    req.logout();
-    res.redirect("/");
-});*/
+
 
 app.get("/movies", function(req, res){
     let today = new Date();
@@ -412,6 +420,7 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
                 console.log(err);
             }
             else{
+                console.log(foundMovie);
                 console.log(foundMovie.repertoires[0].numOfTickets);
                 console.log(foundMovie.repertoires[0].numOfResTickets);
                 console.log(foundMovie.repertoires[0].reservSeats);
@@ -423,18 +432,22 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
                     var niz1 = foundMovie.repertoires[0].reservSeats;
                     var niz2 = niz1.concat(niz).sort();
                     console.log(niz2);
-                    Movie.findOneAndUpdate({'repertoires._id': req.params.resId}, { "repertoires.$.reservSeats" : niz2 , "repertoires.$.numOfResTickets" : numberOfRT + num}, function (err, foundMovie) {
+                    Movie.findOneAndUpdate({'repertoires._id': req.params.resId}, { "repertoires.$.reservSeats" : niz2 , "repertoires.$.numOfResTickets" : numberOfRT + num}, function (err, foundMovie1) {
                         if (err){
                             console.log(err);
                         } else {
                             console.log("Uspesno before!");
                             console.log(user1);
+                            console.log(foundMovie1);
+                            let today = new Date();
                             const reservation1 = new Reservation({
-                                userId:  user1._id,
+                                username:  user1.username,
                                 movieId: foundMovie._id,
+                                movieTitle: foundMovie1.title,
                                 date: foundMovie.repertoires[0].date,
                                 time: foundMovie.repertoires[0].time,
                                 hall: foundMovie.repertoires[0].hall, 
+                                creationDate: today,
                                 reservSeats: niz
                             });
                             reservation1.save();
@@ -450,6 +463,23 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
             }
         });
 });
+
+app.get("/myreservations", function(req, res){
+    if (req.isAuthenticated()){
+        console.log(user1);
+        Reservation.find({'username': user1.username},function(err, foundReservations){
+            if (err){
+                console.log(err);
+            } else {
+           console.log(foundReservations) ;
+          res.render("myreservations", {myReservations: foundReservations});
+            }
+          });
+   
+    } else {
+        res.redirect("/login");
+    }
+  });
 
 app.listen(3000, function() {
     console.log("Server started on port 3000");

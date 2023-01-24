@@ -1,25 +1,38 @@
 <%- include("partials/header"); -%>
 <body>
     <div class="container">
-    <div class="movie-container">
+        <h1>Moje rezervacije</h1>
+        <div class="table-responsive">
+            <table class="table">
+                <tr class="table">
+                    <td>Film</td>
+                    <td>Datum projekcije</td>
+                    <td>Vreme projekcije</td>
+                    <td>Sala</td>
+                    <td>Vreme rezervacije</td>
+                    <td>Rezervisana sedeišta</td>
+                    <td></td>
+                </tr>
         <% myReservations.forEach(function(myReservation){ %>
-                
-             
-            
-                <p4><%= myReservation.movieTitle %><p4>
-                <p4><%=myReservation.date%> min</p4>
+            <tr class="table">
+                <td><%= myReservation.movieTitle %></td>
+                    <% let optionsm = {month: "2-digit"}%>
+                    <% let fullDate = myReservation.date.getDate() + "." + myReservation.date.toLocaleDateString("en-GB", optionsm) + "." + myReservation.date.getFullYear(); %>
+                    <td><%=fullDate%></td>
                
                 
-                <p4><%=myReservation.time%></p4>
+                    <td><%=myReservation.time%></td>
                
-            <p4><%=myReservation.hall%></p4>
-           
-            <p4><%=myReservation.creationDate%></p4>
-            <p4><%=myReservation.reservSeats%></p4>
+                        <td><%=myReservation.hall%></td>
+            <% let fullDateCreation = myReservation.creationDate.getDate() + "." + myReservation.creationDate.toLocaleDateString("en-GB", optionsm) + "." + myReservation.creationDate.getFullYear()+ " " + myReservation.creationDate.getHours()+ ":" + myReservation.creationDate.getMinutes(); %>
+            <td><%=fullDateCreation%></td>
+                <td><%=myReservation.reservSeats%></td>
+                <td><a class="btn btn-dark btn-lg" href="" role="button">Otkaži rezervaciju</a></td>
             <br>
-         
+        </tr>
            <% }) %>
-        </div>  
+        </table>
+    </div>
         </div>  
 
 

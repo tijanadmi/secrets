@@ -71,31 +71,6 @@ const repertoiresSchema = new mongoose.Schema({
 });
 
 const Repertoire = mongoose.model("Repertoire", repertoiresSchema);
-var myDate = new Date("2023-01-18T16:00:00Z");
-var date2 = new Date("2022-12-15T16:00:00Z");
-const repertoires2 = new Repertoire({
-    date: myDate,
-    time: "16:30",
-    hall: "Sala1", 
-    numOfTickets: 50, 
-    numOfResTickets: 2, 
-    reservSeats: ["A1","A2"]
-});
-
-const movie1 = new Movie({
-    title : "Avatar prvi",
-    duration : "190",
-    genre : "akcija, avantura, nauДЌna-fantastika",
-    directors : "James Cameron",
-    actors : "Sam Worthington, Zoe Saldana, Sigourney Weaver, Stephen Lang, Cliff Curtis",
-    screening : date2,
-    plot : "DЕѕejk Sali Еѕivi sa svojom porodicom na planeti Pandori. Kada se vrati poznati neprijatelj koji pokuЕЎava da ih uniЕЎti, DЕѕejk i Nejtiri se udruЕѕuju sa vojskom Navi naroda kako bi zaЕЎtitili svoju planetu.",
-    poster : "https://img.cineplexx.rs/media/rs/inc/movies_licences/avatar_223_1.jpg",
-    repertoires : [repertoires2]
-
-});
-
-//movie1.save();
 
 const hallsSchema=  new mongoose.Schema({
     name: String,
@@ -109,15 +84,14 @@ const usersSchema=  new mongoose.Schema({
     email: String,
     password: String,
     googleId: String,
-    name: String,
-    reservations: [
-        {  date: Date, time: String, hall: String, reservSeats: [String] }
-        ]   
+    name: String
 });
 
 const reservationsSchema=  new mongoose.Schema({
     username:  String,
-    movieId: String,
+    userId: mongoose.Schema.Types.ObjectId,
+    movieId: mongoose.Schema.Types.ObjectId,
+    repertoiresId: mongoose.Schema.Types.ObjectId,
     movieTitle: String,
     date: Date,
     time: String,
@@ -144,7 +118,7 @@ passport.use(User.createStrategy());
 passport.deserializeUser(User.deserializeUser());*/
 passport.serializeUser(function(user, cb) {
     process.nextTick(function() {
-      cb(null, { id: user.id, username: user.username });
+      cb(null, { id: user.id, username: user.username, name: user.name });
     });
   });
   
@@ -157,12 +131,12 @@ passport.serializeUser(function(user, cb) {
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: "http://localhost:3000/auth/google/secrets"
+    callbackURL: "http://localhost:3000/auth/google/movies"
   },
   function(accessToken, refreshToken, profile, cb) {
-    //console.log(profile.displayName);
+    //console.log(profile);
     User.findOrCreate({ googleId: profile.id, name: profile.displayName }, function (err, user) {
-        user1=user;
+        user1 = user;
       return cb(err, user);
     });
   }
@@ -175,7 +149,6 @@ app.get('*', function(req, res, next) {
 
 
 app.get("/", function(req, res){
-    console.log(res.locals.user);
     res.render("home");
 });
 
@@ -204,7 +177,6 @@ app.get("/secrets", function(req, res){
     }
     let day = today.toLocaleDateString("en-GB", options1);
     console.log(day);
-    console.log("nesto");
     if (req.isAuthenticated()){
         res.render("secrets",{myData: day});
     } else {
@@ -221,25 +193,10 @@ app.post("/register", function(req, res){
         } else {
             user1 = user;
             passport.authenticate("local")(req, res, function(){
-                res.redirect("/secrets");
+                res.redirect("/movies");
             });
         }
     });
-    /*const newUser = new User({
-        email: req.body.username,
-        //password: req.body.password
-        password: md5(req.body.password)
-    });
-
-    newUser.save(function(err){
-        if (err) {
-            console.log(err);
-        } else {
-            res.render("secrets");
-        }
-    });*/
-
-    
 });
 
 app.post("/login", function(req, res){
@@ -247,7 +204,6 @@ app.post("/login", function(req, res){
     const user = new User({
         username: req.body.username,
         password: req.body.password,
-        name: "Tijana",
     }); 
 
     req.login(user, function(err){
@@ -255,33 +211,11 @@ app.post("/login", function(req, res){
             console.log(err);
         } else {
             passport.authenticate("local")(req, res, function(){
-                //username=user.username;
                 user1 = user;
-                res.redirect("/secrets");
+                res.redirect("/movies");
             });
         }
     });
-
-    
-    /*const username = req.body.username;
-    const password = md5(req.body.password);
-    console.log("before err");
-    User.findOne({email: username}, function(err,foundUser){
-        if (err){
-            console.log(err);
-        } else {
-            if (foundUser){
-                if (foundUser) {
-                    if (foundUser.password === password) {
-                        res.render("secrets");
-                    } else {
-                        console.log("nije nasao usera");
-                        console.log(password);
-                    }
-                }
-            }
-        }
-    });*/
 });
 
 
@@ -308,11 +242,11 @@ app.get("/movies", function(req, res){
 app.get("/auth/google",
     passport.authenticate("google", { scope: ["profile"] }));
 
-app.get("/auth/google/secrets", 
+app.get("/auth/google/movies", 
   passport.authenticate('google', { failureRedirect: "/login" }),
   function(req, res) {
     // Successful authentication, redirect home.
-    res.redirect("/secrets");
+    res.redirect("/movies");
   });
 
 app.get("/logout", function(req, res, next) {
@@ -344,9 +278,9 @@ app.get("/logout", function(req, res, next) {
     newSecret.save(function(err){
         if (!err){
             console.log("uspesno");
-            res.redirect("/secrets");
+            res.redirect("/movies");
         } else {
-            res.redirect("/secrets");
+            res.redirect("/movies");
             console.log(err);
         }
     });
@@ -442,8 +376,10 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
                             let today = new Date();
                             const reservation1 = new Reservation({
                                 username:  user1.username,
+                                userId: user1._id,
                                 movieId: foundMovie._id,
                                 movieTitle: foundMovie1.title,
+                                repertoiresId: req.params.resId,
                                 date: foundMovie.repertoires[0].date,
                                 time: foundMovie.repertoires[0].time,
                                 hall: foundMovie.repertoires[0].hall, 
@@ -466,12 +402,11 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
 
 app.get("/myreservations", function(req, res){
     if (req.isAuthenticated()){
-        console.log(user1);
-        Reservation.find({'username': user1.username},function(err, foundReservations){
+        Reservation.find({'userId': user1._id},function(err, foundReservations){
             if (err){
                 console.log(err);
             } else {
-           console.log(foundReservations) ;
+           //console.log(foundReservations) ;
           res.render("myreservations", {myReservations: foundReservations});
             }
           });

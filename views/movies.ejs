@@ -16,7 +16,9 @@
             <br>
             <p4><b>glumci: </b><%=moviesItem.actors%></p4>
             <br>
-            <p4><b>u bioskopima od: </b><%=moviesItem.screening%></p4>
+            <% let optionsm = {month: "2-digit"}%>
+            <% let fullDateScreening = moviesItem.screening.getDate() + "." + moviesItem.screening.toLocaleDateString("en-GB", optionsm) + "." + moviesItem.screening.getFullYear(); %>
+            <p4><b>u bioskopima od: </b><%=fullDateScreening%></p4>
             <br>
             <br>
                     <p3>
@@ -27,11 +29,11 @@
                     </p3>
                     <% moviesItem.repertoires.forEach(function(repertoire){ %>
                         <% let m = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"]; %>
-                        <% let optionsm = {month: "2-digit"}%>
+                        
                         <% let dn = ["Nedelja", "Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota"]; %>
                         <% let dan = dn[repertoire.date.getDay()]; %>
-                        
-                        <table >
+                        <div class="table-responsive">
+                        <table class="table">
                             <% if (repertoire.date < todate && repertoire.date >= new Date() ){ %>
                         <tr class="table">
 
@@ -39,13 +41,14 @@
                             <% let fullDate = repertoire.date.getDate() + "." + repertoire.date.toLocaleDateString("en-GB", optionsm) + "." + repertoire.date.getFullYear(); %>
                             <td><%=fullDate%> </td>
                             <td><%= repertoire.time  %></td>
-                            <td> <a class="btn btn-light btn-lg" href="/reservation/<%=repertoire.date%>/<%=repertoire.time%>/<%=repertoire.hall%>/<%=moviesItem._id%>/<%=repertoire._id%>" role="button">Rezerviši</a></td>
-                            <tr >
-                            <br>
+                            <td align="center"> <a class="btn btn-dark btn-lg" href="/reservation/<%=repertoire.date%>/<%=repertoire.time%>/<%=repertoire.hall%>/<%=moviesItem._id%>/<%=repertoire._id%>" role="button">Rezerviši</a></td>
+                        </tr>
+                            
                             <% } %>
                     <% }) %>
                 
             </table>
+        </div>
                 </div>   
             </div>          
            <% }) %>

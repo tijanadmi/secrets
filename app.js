@@ -81,7 +81,8 @@ const hallsSchema=  new mongoose.Schema({
 const Hall = mongoose.model("Hall", hallsSchema);
 
 const usersSchema=  new mongoose.Schema({
-    email: String,
+    _id: mongoose.Schema.Types.ObjectId,
+    username: String,
     password: String,
     googleId: String,
     name: String
@@ -134,8 +135,8 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://localhost:3000/auth/google/movies"
   },
   function(accessToken, refreshToken, profile, cb) {
-    //console.log(profile);
-    User.findOrCreate({ googleId: profile.id, name: profile.displayName }, function (err, user) {
+    console.log(profile);
+    User.findOrCreate({ googleId: profile.id, name: profile.displayName, username: profile.id }, function (err, user) {
         user1 = user;
       return cb(err, user);
     });
@@ -211,8 +212,15 @@ app.post("/login", function(req, res){
             console.log(err);
         } else {
             passport.authenticate("local")(req, res, function(){
-                user1 = user;
-                res.redirect("/movies");
+                User.findOne({username: user.username}, function(err, foundUser){
+                    if (foundUser){
+                        user1 = foundUser;
+                        //console.log(user1);
+                        res.redirect("/movies");
+                    } else {
+                        console.log("No user matching that username was found.");
+                    }
+                });
             });
         }
     });
@@ -224,7 +232,7 @@ app.get("/movies", function(req, res){
     let today = new Date();
     console.log(today);
     
-    var datatodays = today.setDate(new Date(today).getDate() + 7);
+    var datatodays = today.setDate(new Date(today).getDate() + 3);
     todate = new Date(datatodays);
     console.log(todate);
   
@@ -415,6 +423,35 @@ app.get("/myreservations", function(req, res){
         res.redirect("/login");
     }
   });
+
+  app.post("/myreservations", function(req, res){
+    var resId = req.body.cancel;
+    if (req.isAuthenticated()){
+        Reservation.findById(resId,function(err, foundReservation){
+            if (err){
+                console.log(err);
+            } else {
+           var resSeats = foundReservation.reservSeats;
+           console.log(resSeats);
+           console.log(foundReservation.repertoiresId)
+           /*** found Movie */
+           Movie.findOne({'repertoires._id':foundReservation.repertoiresId},{reservSeats:1,  repertoires: { $elemMatch:{ _id:foundReservation.repertoiresId } }}, function (err, foundMovie) {
+            if (err){
+                console.log(err);
+            }
+            else{
+                console.log(foundMovie.repertoires[0].reservSeats);
+            }});
+           /*** end found Movie */
+          res.redirect("/movies");
+            }
+          });
+   
+    } else {
+        res.redirect("/login");
+    }
+  });
+
 
 app.listen(3000, function() {
     console.log("Server started on port 3000");

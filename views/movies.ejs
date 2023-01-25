@@ -37,11 +37,11 @@
                             <% if (repertoire.date < todate && repertoire.date >= new Date() ){ %>
                         <tr class="table">
 
-                        <td ><b><%=dan %></b></td>
+                        <td><b><%=dan %></b></td>
                             <% let fullDate = repertoire.date.getDate() + "." + repertoire.date.toLocaleDateString("en-GB", optionsm) + "." + repertoire.date.getFullYear(); %>
-                            <td><%=fullDate%> </td>
-                            <td><%= repertoire.time  %></td>
-                            <td align="center"> <a class="btn btn-dark btn-lg" href="/reservation/<%=repertoire.date%>/<%=repertoire.time%>/<%=repertoire.hall%>/<%=moviesItem._id%>/<%=repertoire._id%>" role="button">Rezerviši</a></td>
+                            <td class="text-center"><%=fullDate%> </td>
+                            <td class="text-center"><%= repertoire.time  %></td>
+                            <td class="text-center"> <a class="btn btn-dark btn-lg" href="/reservation/<%=repertoire.date%>/<%=repertoire.time%>/<%=repertoire.hall%>/<%=moviesItem._id%>/<%=repertoire._id%>" role="button">Rezerviši</a></td>
                         </tr>
                             
                             <% } %>

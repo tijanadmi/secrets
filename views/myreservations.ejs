@@ -27,7 +27,11 @@
             <% let fullDateCreation = myReservation.creationDate.getDate() + "." + myReservation.creationDate.toLocaleDateString("en-GB", optionsm) + "." + myReservation.creationDate.getFullYear()+ " " + myReservation.creationDate.getHours()+ ":" + myReservation.creationDate.getMinutes(); %>
             <td><%=fullDateCreation%></td>
                 <td><%=myReservation.reservSeats%></td>
-                <td><a class="btn btn-dark btn-lg" href="" role="button">Otkaži rezervaciju</a></td>
+                <td>
+                <form action="/myreservations" method="POST">
+                    <button type="submit" name="cancel" value=<%= myReservation._id %>>Otkaži rezervaciju</button>      
+                </form>
+            </td>
             <br>
         </tr>
            <% }) %>

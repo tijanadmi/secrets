@@ -211,7 +211,7 @@ app.post("/login", function(req, res){
         if (err){
             console.log(err);
         } else {
-            passport.authenticate("local")(req, res, function(){
+            passport.authenticate("local",{ failureRedirect: '/login', failureMessage: true })(req, res, function(){
                 User.findOne({username: user.username}, function(err, foundUser){
                     if (foundUser){
                         user1 = foundUser;
@@ -441,9 +441,36 @@ app.get("/myreservations", function(req, res){
             }
             else{
                 console.log(foundMovie.repertoires[0].reservSeats);
+                console.log(foundMovie.repertoires[0].numOfResTickets);
+                console.log(foundMovie.repertoires[0].numOfResTickets - resSeats.length);
+                var occupy = foundMovie.repertoires[0].reservSeats;
+                var a;
+                var newNumOfTicket = foundMovie.repertoires[0].numOfResTickets - resSeats.length;
+                resSeats.forEach(function(x){
+                    a = occupy.indexOf(x);
+                    occupy = (occupy.slice(0,a)).concat(occupy.slice(a+1,occupy.length));
+                    console.log(occupy);
+                });
+                console.log(occupy);
+                Movie.findOneAndUpdate({'repertoires._id': foundReservation.repertoiresId}, { "repertoires.$.reservSeats" : occupy , "repertoires.$.numOfResTickets" : newNumOfTicket}, function (err, foundMovie1) {
+                    if (err){
+                        console.log(err);
+                    } else {
+                        console.log("Uspesno update!");
+                        Reservation.deleteOne(
+                            {_id: resId},
+                            function(err){
+                                if (!err){
+                                    res.redirect("/movies");
+                                } else {
+                                    console.log(err);
+                                }
+                            }
+                        );   
+                    }});
             }});
            /*** end found Movie */
-          res.redirect("/movies");
+         // res.redirect("/movies");
             }
           });
    

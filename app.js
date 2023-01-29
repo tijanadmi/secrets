@@ -8,10 +8,12 @@ const mongoose = require('mongoose');
 //const encrypt = require('mongoose-encryption');
 //const md5 = require('md5');
 const session = require('express-session');
+const flash = require('connect-flash');
 const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const findOrCreate = require('mongoose-findorcreate');
+
 
 const app = express();
 
@@ -28,6 +30,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -148,13 +151,17 @@ app.get('*', function(req, res, next) {
     next();
 });
 
+app.post('*', function(req, res, next) {
+    res.locals.user = req.user || null;
+    next();
+});
 
 app.get("/", function(req, res){
     res.render("home");
 });
 
 app.get("/login", function(req, res){
-    res.render("login");
+    res.render("login",{message: req.flash('message')});
 });
 
 app.get("/register", function(req, res){
@@ -211,7 +218,12 @@ app.post("/login", function(req, res){
         if (err){
             console.log(err);
         } else {
-            passport.authenticate("local",{ failureRedirect: '/login', failureMessage: true })(req, res, function(){
+            passport.authenticate("local",{ failureRedirect: '/login' })(req, res, function(){
+               if (err){
+                console.log("Pogresna sifra ili lozinka.");
+                req.flash('message',"Pogrešna šifra ili lozinka!");
+                res.redirect("/login");
+               } else {
                 User.findOne({username: user.username}, function(err, foundUser){
                     if (foundUser){
                         user1 = foundUser;
@@ -219,8 +231,12 @@ app.post("/login", function(req, res){
                         res.redirect("/movies");
                     } else {
                         console.log("No user matching that username was found.");
+                        req.flash('message',"Korisnik sa ovom mejl adresom nije registrovan! Molim vas da se registrujete!");
+                        res.redirect("/login");
                     }
                 });
+            }
+            
             });
         }
     });
@@ -242,7 +258,7 @@ app.get("/movies", function(req, res){
           console.log(err);
       } else {
       
-    res.render("movies", {moviesItems: foundMoviesItems, todate: todate});
+    res.render("movies", {moviesItems: foundMoviesItems, todate: todate, message: req.flash('message')});
       }
     });
   });
@@ -338,8 +354,11 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
     var niz = [];
     if (typeOut ==="undefined"){
         console.log("Nije nista izabrano!");
+        req.flash('message',"Niste rezervisali film!");
         res.redirect("/movies");
-    } else if (typeOut ==="string"){
+        
+    } else {
+    if (typeOut ==="string"){
         num = 1;
         niz.push(r);
         console.log(num);
@@ -399,13 +418,9 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
                             res.redirect("/movies");
                         }});
                 }
-                /*foundMovie.repertoires.forEach(function(repertoire){ 
-                    console.log(repertoire.date);
-                    console.log(repertoire.reservSeats);
-                    
-                    });*/
             }
         });
+    }
 });
 
 app.get("/myreservations", function(req, res){

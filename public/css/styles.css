@@ -32,3 +32,7 @@ body {
 .nav-link{
   font-size: 1.2rem;
 }
+
+.notie-container {
+  box-shadow: none;
+}

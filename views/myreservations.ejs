@@ -10,7 +10,7 @@
                     <td>Vreme projekcije</td>
                     <td>Sala</td>
                     <td>Vreme rezervacije</td>
-                    <td>Rezervisana sedeišta</td>
+                    <td>Rezervisana sedišta</td>
                     <td></td>
                 </tr>
         <% myReservations.forEach(function(myReservation){ %>
@@ -18,7 +18,10 @@
                 <td><%= myReservation.movieTitle %></td>
                     <% let optionsm = {month: "2-digit"}%>
                     <% let fullDate = myReservation.date.getDate() + "." + myReservation.date.toLocaleDateString("en-GB", optionsm) + "." + myReservation.date.getFullYear(); %>
+                    <% let fullDateHoureMinute = new Date(myReservation.date.getFullYear(), myReservation.date.getMonth(), myReservation.date.getDate(), myReservation.time.substr(0, 2), myReservation.time.substr(3, 2), "00"); %>
+                    
                     <td><%=fullDate%></td>
+                    
                
                 
                     <td><%=myReservation.time%></td>
@@ -28,9 +31,11 @@
             <td><%=fullDateCreation%></td>
                 <td><%=myReservation.reservSeats%></td>
                 <td>
+                    <% if (fullDateHoureMinute> new Date()){ %>   
                 <form action="/myreservations" method="POST">
                     <button type="submit" name="cancel" value=<%= myReservation._id %>>Otkaži rezervaciju</button>      
                 </form>
+                <% } %>
             </td>
             <br>
         </tr>

@@ -31,6 +31,11 @@ app.use(session({
 }));
 
 app.use(flash());
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -221,17 +226,17 @@ app.post("/login", function(req, res){
             passport.authenticate("local",{ failureRedirect: '/login' })(req, res, function(){
                if (err){
                 console.log("Pogresna sifra ili lozinka.");
-                req.flash('message',"Pogrešna šifra ili lozinka!");
+                req.flash('error',"Pogrešna šifra ili lozinka!");
                 res.redirect("/login");
                } else {
                 User.findOne({username: user.username}, function(err, foundUser){
                     if (foundUser){
                         user1 = foundUser;
-                        //console.log(user1);
+                        req.flash('success',"Uspešno ste se prijavili!");
                         res.redirect("/movies");
                     } else {
                         console.log("No user matching that username was found.");
-                        req.flash('message',"Korisnik sa ovom mejl adresom nije registrovan! Molim vas da se registrujete!");
+                        req.flash('error',"Korisnik sa ovom mejl adresom nije registrovan! Molim vas da se registrujete!");
                         res.redirect("/login");
                     }
                 });
@@ -241,7 +246,6 @@ app.post("/login", function(req, res){
         }
     });
 });
-
 
 
 app.get("/movies", function(req, res){
@@ -258,7 +262,7 @@ app.get("/movies", function(req, res){
           console.log(err);
       } else {
       
-    res.render("movies", {moviesItems: foundMoviesItems, todate: todate, message: req.flash('message')});
+    res.render("movies", {moviesItems: foundMoviesItems, todate: todate/*, message: req.flash('message')*/});
       }
     });
   });
@@ -354,7 +358,7 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
     var niz = [];
     if (typeOut ==="undefined"){
         console.log("Nije nista izabrano!");
-        req.flash('message',"Niste rezervisali film!");
+        req.flash('error',"Niste rezervisali film!");
         res.redirect("/movies");
         
     } else {
@@ -415,6 +419,7 @@ app.post("/reservation/:date/:time/:hall/:movieId/:resId", function(req, res){
                             });
                             reservation1.save();
                             console.log("Uspesno after!");
+                            req.flash('success',"Uspešno ste rezervisali film! Rezervaciju možete videti u delu Moje rezervacije");
                             res.redirect("/movies");
                         }});
                 }
@@ -476,6 +481,7 @@ app.get("/myreservations", function(req, res){
                             {_id: resId},
                             function(err){
                                 if (!err){
+                                    req.flash('success',"Uspešno ste otkazali rezervaciju!");
                                     res.redirect("/movies");
                                 } else {
                                     console.log(err);
